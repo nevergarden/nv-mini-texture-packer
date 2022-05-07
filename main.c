@@ -19,6 +19,8 @@ typedef struct bin_positions {
   uint8_t id;
   uint16_t x;
   uint16_t y;
+  uint16_t w;
+  uint16_t h;
 } bin_positions;
 
 static int file_list_count;
@@ -52,6 +54,8 @@ static int first_fit(bin_positions * positions, width_height * images_data, int 
     positions[i].id = i;
     positions[i].x = pos_x;
     positions[i].y = pos_y;
+    positions[i].w = data.width;
+    positions[i].h = data.height;
     pos_x+=data.width;
   }
   return 0;
@@ -125,5 +129,18 @@ int main(int argc, char* argv[]) {
   stbi_write_png("packed.png", size, size, 4, image, size*4);
   // free it
   free(image);
+  
+  // Now write the atlas
+  FILE * atlas_fd = fopen("packed.atlas", "wb");
+  fwrite(&positions, sizeof(bin_positions), file_list_count, atlas_fd);
+  fclose(atlas_fd);
+
+  // Now write id -> filename into a text file
+  atlas_fd = fopen("packed.txt", "w");
+  for (int i = 0; i<file_list_count; i++) {
+    fprintf(atlas_fd, "%d: %s\r\n", i, file_list_paths[i]);
+  }
+  fflush(atlas_fd);
+  fclose(atlas_fd);
   exit(EXIT_SUCCESS);
 }
