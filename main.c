@@ -1,10 +1,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 typedef struct width_height {
   int width;
@@ -95,5 +98,32 @@ int main(int argc, char* argv[]) {
               NULL);
 
   bin_positions positions[file_list_count];
-  first_fit(positions, images_data, file_list_count, size);
+  int status = first_fit(positions, images_data, file_list_count, size);
+  if(status != 0) {
+    printf("Error: pack size is not enough for all images to fit.\n");
+    exit(EXIT_FAILURE);
+  }
+  // open texture to write to
+  unsigned char * image = malloc(size*size*4);
+  memset(image, 0, size*size*4);
+  // unsigned char * open_image;
+  for (int i = 0; i < file_list_count; i++) {
+    int index = positions[i].id;
+    int width = images_data[index].width;
+    int height = images_data[index].height;
+    unsigned char * open_image = stbi_load(file_list_paths[index], &width, &height, NULL, 4);
+    for(int x = 0; x < width; x++) {
+      for(int y = 0; y < height; y++) {
+        unsigned int lil_pos = (x*4)+(y*width*4);
+        unsigned int pos = ( (positions[i].x + x) * 4) + ( (positions[i].y + y) * 4 * size);
+        memcpy(image+pos, open_image+lil_pos, 4);
+      }
+    }
+    stbi_image_free(open_image);
+  }
+  // write it to file
+  stbi_write_png("packed.png", size, size, 4, image, size*4);
+  // free it
+  free(image);
+  exit(EXIT_SUCCESS);
 }
