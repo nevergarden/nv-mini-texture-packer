@@ -1,9 +1,9 @@
-#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
+#include <nv_mini_texture_packer.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -14,23 +14,13 @@ typedef struct width_height {
   int height;
 } width_height;
 
-// TODO: align this
-typedef struct bin_positions {
-  uint8_t id;
-  uint16_t x;
-  uint16_t y;
-  uint16_t w;
-  uint16_t h;
-} bin_positions;
-
 static int file_list_count;
 static char** file_list_paths;
 
-static int first_fit(bin_positions * positions, width_height * images_data, int image_data_count, int max_size) {
+static int first_fit(nv_atlas_positions * positions, width_height * images_data, int image_data_count, int max_size) {
   uint16_t row_height = 0;
   uint16_t pos_x = 0;
   uint16_t pos_y = 0;
-  int fitted = 0;
   
   width_height data;
 
@@ -98,10 +88,16 @@ int main(int argc, char* argv[]) {
   width_height images_data[file_list_count];
 
   for (int i = 0; i < file_list_count; i++)
-    stbi_info(file_list_paths[i], &images_data[i].width, &images_data[i].height,
-              NULL);
+  {
+    images_data[i].width = 0;
+    images_data[i].height = 0;
+    stbi_info(file_list_paths[i], &images_data[i].width, &images_data[i].height, NULL);
+  }
 
-  bin_positions positions[file_list_count];
+  // Initialize positions and set values
+  nv_atlas_positions positions[file_list_count];
+  memset(&positions, 0, sizeof(nv_atlas_positions)*file_list_count);
+  
   int status = first_fit(positions, images_data, file_list_count, size);
   if(status != 0) {
     printf("Error: pack size is not enough for all images to fit.\n");
@@ -110,7 +106,7 @@ int main(int argc, char* argv[]) {
   // open texture to write to
   unsigned char * image = malloc(size*size*4);
   memset(image, 0, size*size*4);
-  // unsigned char * open_image;
+  unsigned char * open_image;
   for (int i = 0; i < file_list_count; i++) {
     int index = positions[i].id;
     int width = images_data[index].width;
@@ -132,7 +128,9 @@ int main(int argc, char* argv[]) {
   
   // Now write the atlas
   FILE * atlas_fd = fopen("packed.atlas", "wb");
-  fwrite(&positions, sizeof(bin_positions), file_list_count, atlas_fd);
+  fwrite(&file_list_count, sizeof(file_list_count), 1, atlas_fd);
+  fwrite(&positions, sizeof(nv_atlas_positions), file_list_count, atlas_fd);
+  fflush(atlas_fd);
   fclose(atlas_fd);
 
   // Now write id -> filename into a text file
@@ -142,5 +140,17 @@ int main(int argc, char* argv[]) {
   }
   fflush(atlas_fd);
   fclose(atlas_fd);
+
+  /* 
+  // A test to read atlas and report it's sizes
+  int psize = nv_atlas_get_texture_count("packed.atlas");
+  nv_atlas_positions p[psize];
+  nv_atlas_get_positions(p, "packed.atlas");
+
+  for (int i = 0; i < psize; i++) {
+    printf("%d: %d,%d\n", p[i].id, p[i].x, p[i].y);
+  }
+  */
+
   exit(EXIT_SUCCESS);
 }
