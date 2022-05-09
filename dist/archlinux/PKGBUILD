@@ -1,6 +1,6 @@
 # Maintainer: nevergarden <nevergarden@gmail.com>
 pkgname=nv-mini-texture-packer
-pkgver=0.0.2
+pkgver=0.0.1
 pkgrel=1
 pkgdesc="Mini atlas parser for nv-mini-texture-packer"
 arch=('x86_64')
