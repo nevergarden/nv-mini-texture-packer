@@ -1,13 +1,13 @@
 # Maintainer: nevergarden <nevergarden@gmail.com>
 pkgname=nv-mini-texture-packer
-pkgver=0.0.1
+pkgver=0.0.2
 pkgrel=1
 pkgdesc="Mini atlas parser for nv-mini-texture-packer"
 arch=('x86_64')
 license=('MIT')
 makedepends=('cmake')
 source=(${pkgname}-${pkgver}.tar.gz::https://github.com/nevergarden/nv-mini-texture-packer/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('09d14a0c470a821899e9d370461385dc9f795d8f8c1d4c4082329919a0095e18')
+sha256sums=('966fef6aed1634fe7cc35e4bc2aeac7f2096e922c0cd37933e56cee6ef05e2f0')
 
 build() {
     cmake -B build -S "${pkgname}-${pkgver}" -DCMAKE_INSTALL_PREFIX='/usr'
