@@ -7,7 +7,6 @@ arch=('x86_64')
 license=('MIT')
 makedepends=('cmake')
 source=(${pkgname}-${pkgver}.tar.gz::https://github.com/nevergarden/nv-mini-texture-packer/archive/refs/tags/v${pkgver}.tar.gz)
-sha256sums=('966fef6aed1634fe7cc35e4bc2aeac7f2096e922c0cd37933e56cee6ef05e2f0')
 
 build() {
     cmake -B build -S "${pkgname}-${pkgver}" -DCMAKE_INSTALL_PREFIX='/usr'
