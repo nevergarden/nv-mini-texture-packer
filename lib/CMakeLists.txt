@@ -4,4 +4,6 @@ set_target_properties(nv-mini-texture-packer PROPERTIES
   SOVERSION 0
   PUBLIC_HEADER nv_mini_texture_packer.h
 )
-
+install(
+  TARGETS nv-mini-texture-packer
+)
